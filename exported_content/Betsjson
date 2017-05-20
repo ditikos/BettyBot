@@ -1,0 +1,5 @@
+{"_id":{"$oid":"5920382a0d00e18c443b2c3c"},"selection":"EV001SEL001","amount":10,"currency":"EUR","odds":"4/1","betslip":"EV001SEL001_1495283754327","__v":0}
+{"_id":{"$oid":"59203abba284bf94047e81ad"},"selection":"EV001SEL001","amount":10,"currency":"EUR","odds":"4/1","betslip":"EV001SEL001_1495284411482","__v":0}
+{"_id":{"$oid":"59203c283571989d7098acda"},"selection":"EV006SEL002","amount":50,"currency":"EUR","odds":"4/1","betslip":"EV006SEL002_1495284776764","__v":0}
+{"_id":{"$oid":"592041f274d448001957efb8"},"selection":"EV001SEL001","amount":10,"currency":"EUR","odds":"4/1","betslip":"EV001SEL001_1495286258734","__v":0}
+{"_id":{"$oid":"592042fe74d448001957efb9"},"selection":"EV006SEL003","amount":4,"currency":"ARS","odds":"4/1","betslip":"EV006SEL003_1495286526679","__v":0}
