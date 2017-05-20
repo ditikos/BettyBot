@@ -2,9 +2,9 @@
   "name": "betty",
   "version": "1.0.0",
   "description": "A Digital Bet Helper",
-  "main": "app.js",
+  "main": "server/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server/server.js"
   },
   "author": "Panagiotis Chalatsakos",
   "license": "MIT",
