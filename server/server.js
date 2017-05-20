@@ -26,13 +26,13 @@ app.post('/webhook', (req, res) => {
         case "placeBet":
             //console.log(req.body);
             //console.log(JSON.stringify(req.body.result.contexts));
-            console.log(`Selection is: ${req.body.result.parameters.selection}, Stake is: ${JSON.stringify(req.body.result.parameters.stake,undefined,2)}`);
-           var selection = req.body.result.parameters.selection;
-           var amount = req.body.result.parameters.stake.amount;
-           var currency = req.body.result.parameters.stake.currency;
-           var d = new Date();
-           var n = d.getTime();
-           var betslip = `${selection}_${n}`;
+            console.log(`Selection is: ${req.body.result.parameters.selection}, Stake is: ${JSON.stringify(req.body.result.parameters.stake, undefined, 2)}`);
+            var selection = req.body.result.parameters.selection;
+            var amount = req.body.result.parameters.stake.amount;
+            var currency = req.body.result.parameters.stake.currency;
+            var d = new Date();
+            var n = d.getTime();
+            var betslip = `${selection}_${n}`;
 
 
             var bet = new Bet({
@@ -55,8 +55,9 @@ app.post('/webhook', (req, res) => {
                 console.log(e);
                 res.status(400).send(e);
             });
-           
-        break;
+
+            break;
+
         case "getEvents":
             let eventType = req.body.result.parameters.EventType;
             if (eventType === undefined || eventType.toUpperCase() == 'ALL' || eventType.toUpperCase() == 'SPORTS') {
@@ -99,11 +100,12 @@ app.post('/webhook', (req, res) => {
                 res.status(400).send(err);
             });
             break;
+
         default:
             botResponse = {
                 "speech": "I did not get that quite...",
                 "displayText": "I did not get that quite...",
-                "source": "eventServiceApp"
+                "source": "aiServiceApp"
             };
             res.status(200).send(botResponse);
     }
