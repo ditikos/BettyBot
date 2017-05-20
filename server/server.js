@@ -1,9 +1,13 @@
+// (Skype) appId:  5d3f999f-cf61-4a78-bef0-1d043021c96d 
+// (Skype)  pass:  RU6FaWYMrwqLvhJukjdqZE5
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const _ = require('lodash');
 
 const { mongoose } = require('./db/mongoose');
 const { Event } = require('./models/event');
+const { Bet } = require('./models/bet');
 
 const eventTypes = ['football', 'tennis', 'basketball'];
 
@@ -13,19 +17,49 @@ app.use(bodyParser.json());
 var botResponse = {};
 
 app.post('/webhook', (req, res) => {
-    //console.log(req.body);
+    console.log(req.body);
 
     var action = req.body.result.action;
     var searchQuery = {};
     var selectionArray = [];
     switch (action) {
         case "placeBet":
-            console.log(req.body);
-            console.log(JSON.stringify(req.body.result.contexts, undefined, 2));
+            //console.log(req.body);
+            //console.log(JSON.stringify(req.body.result.contexts));
+            console.log(`Selection is: ${req.body.result.parameters.selection}, Stake is: ${JSON.stringify(req.body.result.parameters.stake,undefined,2)}`);
+           var selection = req.body.result.parameters.selection;
+           var amount = req.body.result.parameters.stake.amount;
+           var currency = req.body.result.parameters.stake.currency;
+           var d = new Date();
+           var n = d.getTime();
+           var betslip = `${selection}_${n}`;
+
+
+            var bet = new Bet({
+                selection: selection,
+                amount: amount,
+                currency: currency,
+                odds: '4/1',
+                betslip: betslip
+            });
+
+            bet.save().then((doc) => {
+                console.log(doc);
+                botResponse = {
+                    "speech": `Bet placed. Your betslip id is: ${betslip}.`,
+                    "displayText": `Bet has been placed.`,
+                    "source": "betServiceApp"
+                };
+                res.status(200).send(botResponse);
+            }, (e) => {
+                console.log(e);
+                res.status(400).send(e);
+            });
+           
         break;
         case "getEvents":
             let eventType = req.body.result.parameters.EventType;
-            if (eventType === undefined || eventType.toUpperCase() == 'ALL') {
+            if (eventType === undefined || eventType.toUpperCase() == 'ALL' || eventType.toUpperCase() == 'SPORTS') {
                 console.log("All events");
             } else {
                 console.log(eventType);
@@ -33,8 +67,6 @@ app.post('/webhook', (req, res) => {
                     sport: eventType.toUpperCase()
                 };
             }
-
-            //console.log(JSON.stringify(searchQuery, undefined, 2));
 
             Event.find(searchQuery).then((events) => {
                 if (events.length === 0) {
@@ -52,15 +84,14 @@ app.post('/webhook', (req, res) => {
                             selections += `\t[${result.title} (${result.odds}) ${result.select_id}]\n`;
                             selectionArray.push(result);
                         });
-                        console.log(`Item: ${item.title}, Selection: ${selections}`);
+                        //console.log(`Item: ${item.title}, Selection: ${selections}`);
                         //console.log(JSON.stringify(item, undefined, 2));
                         results += `${item.title} : \n${selections}\n`;
                     });
                     botResponse = {
-                        "speech": `Displaying ${events.length} events:\n${results}`,
+                        "speech": `Displaying ${events.length} events:\n${results}\n\nWould you like to place a bet?`,
                         "displayText": `Displaying ${events.length} events...`,
-                        "source": "eventServiceApp",
-                        "contextOut": [{"name":"listOfEvents", "lifespan":2, "parameters":{"selections":selectionArray}}]
+                        "source": "eventServiceApp"
                     };
                 }
                 res.status(200).send(botResponse);

@@ -14,7 +14,7 @@
     "express": "^4.15.3",
     "lodash": "^4.17.4",
     "mongodb": "^2.2.26",
-    "mongoose": "^4.9.9"
+    "mongoose": "^4.10.0"
   },
   "devDependencies": {
     "@types/body-parser": "^1.16.3",

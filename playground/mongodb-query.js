@@ -1,18 +1,17 @@
-var {MongoClient} = require('mongodb');
+var {mongoose} = require('./../server/db/mongoose');
+var {Bet}      = require('./../server/models/bet');
 
-var url = 'mongodb://pchalats:Panahs18s!@ds133291.mlab.com:33291/betserviceinfodb';
+var bet = new Bet({
+    selection: "EV001SEL001",
+    amount: 1,
+    currency: "GBP",
+    odds: '4/1',
+    betslip: 'EV001_BET'
+});
 
-MongoClient.connect(url, (err, db) => {
-    if (err) {
-        return console.log('Could not connect to bet service info db');
-    }
-
-    var collection = db.collection('Events');
-    collection.find({}).toArray((err, docs) => {
-        console.log(`Found: ${docs.length} docs`);
-        //console.log(docs);
-    });
-
-    db.close();
+bet.save().then((doc) => {
+    console.log(doc);
+}, (e) => {
+    console.log(e);
 });
 
