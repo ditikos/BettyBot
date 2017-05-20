@@ -109,6 +109,9 @@ app.post('/webhook', (req, res) => {
     }
 });
 
-app.listen(9000, () => {
-    console.log('Service started at 9000');
+var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
+var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
+
+app.listen(server_port, () => {
+    console.log(`Service started at ${server_ip_address}:${server_port}`);
 });
