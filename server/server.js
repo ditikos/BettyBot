@@ -126,25 +126,34 @@ app.post('/webhook', (req, res) => {
             var n = d.getTime();
             var betslip = `${selection}_${n}`;
 
-            var bet = new Bet({
-                selection: selection,
-                amount: amount,
-                currency: currency,
-                odds: '4/1',
-                betslip: betslip
-            });
+            Event.find({} , {selection: { $elemMatch: {select_id: selection}}}).then((doc) => {
+                var odds = "";
+                _.each(doc, (item) => {
+                    _.each(item.selection, (item2) => {
+                        odds = item2.odds;
+                        return false;
+                    });
+                });
+                console.log(odds);
+                var bet = new Bet({
+                    selection: selection,
+                    amount: amount,
+                    currency: currency,
+                    odds: odds,
+                    betslip: betslip
+                });
 
-            bet.save().then((doc) => {
-                botResponse = {
-                    "speech": `Bet placed. Your betslip id is: ${betslip}.`,
-                    "displayText": `Bet has been placed.`,
-                    "source": "betServiceApp"
-                };
-                res.status(200).send(botResponse);
-            }, (e) => {
-                res.status(400).send(e);
+                bet.save().then((doc) => {
+                    botResponse = {
+                        "speech": `Bet placed. Your betslip id is: ${betslip}.`,
+                        "displayText": `Bet has been placed.`,
+                        "source": "betServiceApp"
+                    };
+                    res.status(200).send(botResponse);
+                }, (e) => {
+                    res.status(400).send(e);
+                });
             });
-
             break;
 
         case "getEvents":
