@@ -1,6 +1,3 @@
-// (Skype) appId:  5d3f999f-cf61-4a78-bef0-1d043021c96d 
-// (Skype)  pass:  RU6FaWYMrwqLvhJukjdqZE5
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const _ = require('lodash');
