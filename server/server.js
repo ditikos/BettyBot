@@ -28,21 +28,27 @@ app.get('/betinfo', (req, res) => {
     if (qBetType1 !== 'undefined') {
         BetType.find({ code: qBetType1 }).then((docs) => {
             _.each(docs, (doc) => {
-                info+= `- ${doc.title} (code: ${doc.code}): \n\t${doc.description}\n`;
+                console.log(doc);
+                info += `- ${doc.title} (code: ${doc.code}): \n\t${doc.description}`;
+                console.log(doc.selections);
+                if (doc.selections !== undefined) {
+                    info += `Number of selections to win: ${doc.selections}`;
+                }
+                info += `\n`;
             });
             res.status(200).send(info);
         }).catch((e) => {
             console.log("Error: ", e);
             res.status(400).send("The service could not bring back any data.");
         });
-    } 
+    }
 });
 
 app.post('/webhook', (req, res) => {
     //console.log(req.body);
 
     var action = req.body.result.action;
-    console.log( 'Action is: ', action);
+    console.log('Action is: ', action);
     var searchQuery = {};
     var selectionArray = [];
     switch (action) {
@@ -77,7 +83,7 @@ app.post('/webhook', (req, res) => {
             break;
         case "betInfo.listBetTypes":
             var returnText = "";
-            BetType1.find().then((docs) => {
+            BetType.find().then((docs) => {
                 _.each(docs, (item) => {
                     returnText += `\n- ${item.title} (code: ${item.code})`;
                 });
@@ -88,7 +94,7 @@ app.post('/webhook', (req, res) => {
                 };
                 res.status(200).send(botResponse);
             });
-        break;
+            break;
         case "placeBet":
             var selection = req.body.result.parameters.selection;
             var amount = req.body.result.parameters.stake.amount;

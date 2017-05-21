@@ -9,6 +9,9 @@ var BetTypeSchema = mongoose.Schema({
     },
     description: {
         type: String
+    },
+    selections: {
+        type: Number
     }
 });
 
