@@ -1,3 +1,9 @@
+//
+//  Open university of Cyprus
+//  Information and Communication Systems
+//  Panagiotis Chalatsakos (c) 2017
+//  Student Id: 11300837
+//
 const express = require('express');
 const bodyParser = require('body-parser');
 const _ = require('lodash');
@@ -25,9 +31,7 @@ app.get('/betinfo', (req, res) => {
     if (qBetType1 !== 'undefined') {
         BetType.find({ code: qBetType1 }).then((docs) => {
             _.each(docs, (doc) => {
-                console.log(doc);
                 info += `- ${doc.title} (code: ${doc.code}): \n\t${doc.description}`;
-                console.log(doc.selections);
                 if (doc.selections !== undefined) {
                     info += `Number of selections to win: ${doc.selections}`;
                 }
@@ -35,20 +39,44 @@ app.get('/betinfo', (req, res) => {
             });
             res.status(200).send(info);
         }).catch((e) => {
-            console.log("Error: ", e);
             res.status(400).send("The service could not bring back any data.");
         });
     }
 });
 
 app.post('/webhook', (req, res) => {
-    //console.log(req.body);
 
     var action = req.body.result.action;
-    console.log('Action is: ', action);
     var searchQuery = {};
     var selectionArray = [];
     switch (action) {
+        case "winnings.Info":
+            var betslipid = req.body.result.parameters.BetslipId;
+            var botResponse = {};
+            Bet.find({ betslip: betslipid }).then((docs) => {
+                if (docs.length === 0) {
+                    botResponse = {
+                        "speech": `No betslip found. Please make sure you have typed it correctly.`,
+                        "displayText": `No betslip found. Please make sure you have typed it correctly.`,
+                        "source": "winningsInfoServiceApp"
+                    };
+                } else {
+                    var msg = "";
+                    _.each(docs, (item) => {
+                        var value = eval(item.odds);
+                        var price = item.amount * value;
+                        var winnings = price + item.amount;
+                        msg += `Bet Slip: ${item.betslip} with stake: ${item.amount} ${item.currency} and odds: ${item.odds} wins: ${winnings} ${item.currency}`;
+                    });
+                    botResponse = {
+                        "speech": msg,
+                        "displayText": msg,
+                        "source": "winningInfoServiceApp"
+                    };
+                }
+                res.status(200).send(botResponse);
+            });
+            break;
         case "betInfo":
             var bettype1 = req.body.result.parameters.BetType1;
             let varToSend = "";
@@ -57,16 +85,14 @@ app.post('/webhook', (req, res) => {
                     varToSend += `bettype1[]=${item}&`;
                 });
                 varToSend = varToSend.slice(0, -1);
-                console.log(varToSend);
             } else {
                 varToSend = `bettype1=${bettype1}`;
             }
 
 
+            const bet_info_url = `http://betty-bot-betty-bot-service.1d35.starter-us-east-1.openshiftapps.com/betinfo/?${varToSend}`;
             //const bet_info_url = `http://127.0.0.1:8080/betinfo/?${varToSend}`;
-            const bet_info_url =`http://betty-bot-betty-bot-service.1d35.starter-us-east-1.openshiftapps.com/betinfo/?${varToSend}`;
 
-            console.log("Sent:", bet_info_url);
             axios.get(bet_info_url).then((response) => {
                 let botResponse = {
                     "speech": `${response.data}`,
@@ -75,7 +101,6 @@ app.post('/webhook', (req, res) => {
                 };
                 res.status(200).send(botResponse);
             }).catch((err) => {
-                //console.log('Error: ', err);
                 res.status(400).send(err);
             });
             break;
@@ -117,7 +142,6 @@ app.post('/webhook', (req, res) => {
                 };
                 res.status(200).send(botResponse);
             }, (e) => {
-                console.log(e);
                 res.status(400).send(e);
             });
 
