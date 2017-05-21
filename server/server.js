@@ -4,10 +4,13 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const _ = require('lodash');
+const axios = require('axios');
+const querystring = require("querystring");
 
 const { mongoose } = require('./db/mongoose');
 const { Event } = require('./models/event');
 const { Bet } = require('./models/bet');
+const { BetType } = require('./models/bettype1');
 
 const eventTypes = ['football', 'tennis', 'basketball'];
 
@@ -16,24 +19,89 @@ app.use(bodyParser.json());
 
 var botResponse = {};
 
+app.get('/betinfo', (req, res) => {
+    var qBetType1 = req.query.bettype1;
+    var qBetType2 = req.query.bettype2;
+
+    var info = "";
+
+    if (qBetType1 !== 'undefined') {
+        BetType.find({ code: qBetType1 }).then((docs) => {
+            _.each(docs, (doc) => {
+                console.log(doc);
+                info += `- ${doc.title} (code: ${doc.code}): \n\t${doc.description}`;
+                console.log(doc.selections);
+                if (doc.selections !== undefined) {
+                    info += `Number of selections to win: ${doc.selections}`;
+                }
+                info += `\n`;
+            });
+            res.status(200).send(info);
+        }).catch((e) => {
+            console.log("Error: ", e);
+            res.status(400).send("The service could not bring back any data.");
+        });
+    }
+});
+
 app.post('/webhook', (req, res) => {
-    console.log(req.body);
+    //console.log(req.body);
 
     var action = req.body.result.action;
+    console.log('Action is: ', action);
     var searchQuery = {};
     var selectionArray = [];
     switch (action) {
+        case "betInfo":
+            var bettype1 = req.body.result.parameters.BetType1;
+            let varToSend = "";
+            if (_.isArray(bettype1)) {
+                _.each(bettype1, (item) => {
+                    varToSend += `bettype1[]=${item}&`;
+                });
+                varToSend = varToSend.slice(0, -1);
+                console.log(varToSend);
+            } else {
+                varToSend = `bettype1=${bettype1}`;
+            }
+
+
+            const bet_info_url = `http://127.0.0.1:8080/betinfo/?${varToSend}`;
+
+            console.log("Sent:", bet_info_url);
+            axios.get(bet_info_url).then((response) => {
+                let botResponse = {
+                    "speech": `${response.data}`,
+                    "displayText": `${response.data}`,
+                    "source": "betInfoServiceApp"
+                };
+                res.status(200).send(botResponse);
+            }).catch((err) => {
+                //console.log('Error: ', err);
+                res.status(400).send(err);
+            });
+            break;
+        case "betInfo.listBetTypes":
+            var returnText = "";
+            BetType.find().then((docs) => {
+                _.each(docs, (item) => {
+                    returnText += `\n- ${item.title} (code: ${item.code})`;
+                });
+                let botResponse = {
+                    "speech": `Certainly! Here are all bet types: ${returnText}.\nYou can ask about any of them.`,
+                    "displayText": `Certainly! Here are all bet types: ${returnText}.\n You can ask about any of them.`,
+                    "source": "betInfoServiceApp"
+                };
+                res.status(200).send(botResponse);
+            });
+            break;
         case "placeBet":
-            //console.log(req.body);
-            //console.log(JSON.stringify(req.body.result.contexts));
-            console.log(`Selection is: ${req.body.result.parameters.selection}, Stake is: ${JSON.stringify(req.body.result.parameters.stake, undefined, 2)}`);
             var selection = req.body.result.parameters.selection;
             var amount = req.body.result.parameters.stake.amount;
             var currency = req.body.result.parameters.stake.currency;
             var d = new Date();
             var n = d.getTime();
             var betslip = `${selection}_${n}`;
-
 
             var bet = new Bet({
                 selection: selection,
@@ -44,7 +112,6 @@ app.post('/webhook', (req, res) => {
             });
 
             bet.save().then((doc) => {
-                console.log(doc);
                 botResponse = {
                     "speech": `Bet placed. Your betslip id is: ${betslip}.`,
                     "displayText": `Bet has been placed.`,
@@ -61,9 +128,9 @@ app.post('/webhook', (req, res) => {
         case "getEvents":
             let eventType = req.body.result.parameters.EventType;
             if (eventType === undefined || eventType.toUpperCase() == 'ALL' || eventType.toUpperCase() == 'SPORTS') {
-                console.log("All events");
+                console.log("DEV: All events");
             } else {
-                console.log(eventType);
+                console.log("DEV: ", eventType);
                 searchQuery = {
                     sport: eventType.toUpperCase()
                 };
@@ -79,14 +146,12 @@ app.post('/webhook', (req, res) => {
                 } else {
                     let results = [];
                     _.each(events, (item) => {
-                        //console.log(`Key: ${key} => ${value}`);
                         var selections = "";
                         _.each(item.selection, (result) => {
                             selections += `\t[${result.title} (${result.odds}) ${result.select_id}]\n`;
                             selectionArray.push(result);
                         });
-                        //console.log(`Item: ${item.title}, Selection: ${selections}`);
-                        //console.log(JSON.stringify(item, undefined, 2));
+
                         results += `${item.title} : \n${selections}\n`;
                     });
                     botResponse = {
