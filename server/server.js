@@ -64,7 +64,7 @@ app.post('/webhook', (req, res) => {
 
 
             //const bet_info_url = `http://127.0.0.1:8080/betinfo/?${varToSend}`;
-            const bet_info_url =`http://betty-bot-betty-bot-service.1d35.starter-us-east-1.openshiftapps.com:8080/betinfo/?${varToSend}`;
+            const bet_info_url =`http://betty-bot-betty-bot-service.1d35.starter-us-east-1.openshiftapps.com/betinfo/?${varToSend}`;
 
             console.log("Sent:", bet_info_url);
             axios.get(bet_info_url).then((response) => {
